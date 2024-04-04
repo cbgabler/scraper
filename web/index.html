@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Carson's Website</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+        function toggleGallery(galleryId) {
+            const galleries = document.querySelectorAll('.image-gallery');
+            galleries.forEach((gallery) => {
+                gallery.style.display = 'none';
+            });
+            const gallery = document.getElementById(galleryId);
+            gallery.style.display = 'block';
+        }
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <h1 class="logo"><a href="index.html">Carson's Website</a></h1>
+        <ul class="nav-list">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="blog.html">Blog</a></li>
+            <li><a href="portfolio.html">Portfolio</a></li>
+            <li><a href="resume.html">Resume</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </nav>
+    <main>
+        <div class="pg-title">
+            <h1>Hello Reader!</h1>
+        </div>
+        <div class="about">
+            <div class="about-image">
+                <img src="me.png" alt="me" width="244" height="363">
+            </div>
+            <div class="about-text">
+                <p>Hey all, my name is Carson Gabler.</p>
+                <p>I am a second year Computer Science major from <strong>Portland, Oregon</strong>. Here are some things I did this summer!</p>
+                <p>I <strong><a href="javascript:void(0);" onclick="toggleGallery('gallery-soccer');">love soccer</a></strong>. I have played it my whole life</p>
+                <p>I was also able to <strong><a href="javascript:void(0);" onclick="toggleGallery('gallery-gym');">work out</a></strong> with all my friends.</p>
+                <p>I went to visit my good friends at Oregon State. <strong><a href="javascript:void(0);" onclick="toggleGallery('gallery-beavs');">GO BEAVS</a></strong></p>
+                <p>I attended a couple <strong><a href="javascript:void(0);" onclick="toggleGallery('gallery-concerts');">concerts</a></strong> and <strong><a href="javascript:void(0);" onclick="toggleGallery('gallery-music-festivals');">music festivals</a></strong>.</p>
+                <p>Finally, I was able to <strong><a href="resume.html">intern</a></strong> with my local high school and my favorite teacher. Focusing in <em>software development, testing algorithims, and teaching!</em></p>
+            </div>
+        </div>
+        <div class="image-gallery" id="gallery-soccer">
+            <img src="soccer.JPG" alt="Soccer">
+        </div>
+        <div class="image-gallery" id="gallery-gym">
+            <img src="workout.jpeg" alt="Working Out">
+        </div>
+        <div class="image-gallery" id="gallery-beavs">
+            <img src="osu.jpg" alt="GO BEAVS">
+        </div>
+        <div class="image-gallery" id="gallery-concerts">
+            <img src="bea.jpg" alt="Concerts">
+        </div>
+        <div class="image-gallery" id="gallery-music-festivals">
+            <img src="festival.jpeg" alt="Music Festivals">
+        </div>
+        <div class="gallery-text">
+            <h4 class="image-gallery-text">Click an image to check out my image gallery!</h4>
+        </div>
+    </main>
+    <footer class="footer">© 2023 Carson's Website | All Rights Reserved</footer>
+</body>
+</html>
