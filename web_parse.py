@@ -5,6 +5,7 @@ from user_agents import user_agents
 import random
 import time
 import csv
+import constants as cts
 
 def instantiate_driver():
     ## collect random user agent to mask browser
@@ -17,59 +18,56 @@ def instantiate_driver():
     driver = uc.Chrome(options=options)
     return driver
 
-def start_driver(player_urls, driver):
-    driver.get(player_urls)
-    time.sleep(2)
-    page = driver.page_source
-    return page
+def extract_data(bookie_urls, driver):
+    for bookie, url in bookie_urls.items():
+        print(f"Now extracting{bookie}")
+        driver.get(url)
+        html = driver.page_source
+        time.sleep(2)
+        soup = BeautifulSoup(html, "lxml")
+        divs = soup.find_all("div", class_=cts.MAIN_DIV[bookie])
 
-def extract_dk(dk_html):
-    soup = BeautifulSoup(dk_html, "lxml")
+        today_games = []
+        tomorrow_games = []
+        for div in divs:
+            date_div = div.find("div", class_="sportsbook-table-header__title")
+            if date_div:
+                date_text = date_div.text.strip().lower()
+                if "today" in date_text:
+                    today_games.append(div)
+                elif "tomorrow" in date_text:
+                    tomorrow_games.append(div)
 
-    # Find all instances of "parlay-card-10-a"
-    divs = soup.find_all("div", class_="parlay-card-10-a")
+        today_data = {}
+        for game in today_games:
+            mlb_team = game.findAll(cts.TEAM_TYPE[bookie], class_=cts.TEAM_HTML[bookie])
+            mlb_ml = game.findAll(cts.ML_TYPE[bookie], class_=cts.ML_HTML[bookie])
 
-    # Loop through each div to separate today's and tomorrow's games
-    today_games = []
-    tomorrow_games = []
-    for div in divs:
-        date_div = div.find("div", class_="sportsbook-table-header__title")
-        if date_div:
-            date_text = date_div.text.strip().lower()
-            if "today" in date_text:
-                today_games.append(div)
-            elif "tomorrow" in date_text:
-                tomorrow_games.append(div)
+            for team, ml in zip(mlb_team, mlb_ml):
+                today_data[team.text.strip()] = {"moneyline": ml.text.strip()}
 
-    # Process today's games
-    today_data = {}
-    for game in today_games:
-        mlb_team = game.findAll("div", class_="event-cell__name-text")
-        mlb_ml = game.findAll("span", class_="sportsbook-odds american no-margin default-color")
+        tomorrow_data = {}
+        for game in tomorrow_games:
+            mlb_team = game.findAll(cts.TEAM_TYPE[bookie], class_=cts.TEAM_HTML[bookie])
+            mlb_ml = game.findAll(cts.ML_TYPE[bookie], class_=cts.ML_HTML[bookie])
 
-        for team, ml in zip(mlb_team, mlb_ml):
-            today_data[team.text.strip()] = {"moneyline": ml.text.strip()}
+            for team, ml in zip(mlb_team, mlb_ml):
+                tomorrow_data[team.text.strip()] = ml.text.strip()
 
-    # Process tomorrow's games
-    tomorrow_data = {}
-    for game in tomorrow_games:
-        mlb_team = game.findAll("div", class_="event-cell__name-text")
-        mlb_ml = game.findAll("span", class_="sportsbook-odds american no-margin default-color")
+        with open(f"{bookie}_today_games.csv", mode='w', newline='') as today_file:
+            fieldnames = ["Team", "Moneyline"]
+            writer = csv.DictWriter(today_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for team, moneyline in today_data.items():
+                writer.writerow({"Team": team, "Moneyline": moneyline})
 
-        for team, ml in zip(mlb_team, mlb_ml):
-            tomorrow_data[team.text.strip()] = ml.text.strip()
+        with open(f"{bookie}_tomorrow_games.csv", mode='w', newline='') as tomorrow_file:
+            fieldnames = ["Team", "Moneyline"]
+            writer = csv.DictWriter(tomorrow_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for team, moneyline in tomorrow_data.items():
+                writer.writerow({"Team": team, "Moneyline": moneyline})
 
-    # Example: write the information to separate CSV files for today and tomorrow
-    with open("today_games.csv", mode='w', newline='') as today_file:
-        fieldnames = ["Team", "Odds"]
-        writer = csv.DictWriter(today_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for team, odds in today_data.items():
-            writer.writerow({"Team": team, "Odds": odds})
-
-    with open("tomorrow_games.csv", mode='w', newline='') as tomorrow_file:
-        fieldnames = ["Team", "Odds"]
-        writer = csv.DictWriter(tomorrow_file, fieldnames=fieldnames)
-        writer.writeheader()
-        for team, odds in tomorrow_data.items():
-            writer.writerow({"Team": team, "Odds": odds})
+def extract_bv(bv_url, driver):
+    driver.get(bv_url)
+    bv_html = driver.page_source

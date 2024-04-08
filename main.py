@@ -4,12 +4,11 @@ import constants as cts
 import timeit
 
 def main():
-    # Measure time taken to execute extract_points
+    # Measure time taken to execute extract_data
     start_time = timeit.default_timer()
     driver = wp.instantiate_driver()
-    player_url = config.dk_url_creator(cts.DK_DEFAULT_URL)
-    source = wp.start_driver(player_url, driver)
-    wp.extract_dk(source)
+    bookie_urls = config.url_creator(cts.BOOKIE_URLS)
+    wp.extract_data(bookie_urls, driver)
     end_time = timeit.default_timer()
     
     print(f"Time taken: {end_time - start_time} seconds")
