@@ -6,8 +6,8 @@ import timeit
 def main():
     # Measure time taken to execute extract_data
     start_time = timeit.default_timer()
-    driver = wp.instantiate_driver()
-    bookie_urls = config.url_creator(cts.BOOKIE_URLS)
+    driver = wp.init_driver()
+    bookie_urls = config.url_creator(cts.BOOKIE_URLS, cts.SPORTS)
     wp.extract_data(bookie_urls, driver)
     end_time = timeit.default_timer()
     
