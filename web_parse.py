@@ -1,9 +1,10 @@
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-import undetected_chromedriver as uc
 import undetected_chromedriver as uc
 from user_agents import user_agents
 import random
-import time
 import csv
 import constants as cts
 import os
@@ -27,8 +28,9 @@ def dk_extract_data(dk_urls, driver):
     for sport, url in dk_urls.items():
         print(f"Now extracting DraftKings {sport}")
         driver.get(url)
+        wait = WebDriverWait(driver, 5)  # Adjust the timeout as needed
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
         html = driver.page_source
-        time.sleep(2)
         soup = BeautifulSoup(html, "lxml")
         divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
 
@@ -42,6 +44,8 @@ def dk_extract_data(dk_urls, driver):
                     today_games.append(div)
                 elif "tomorrow" in date_text:
                     tomorrow_games.append(div)
+        print(today_games)
+        print(tomorrow_games)         
 
         today_data = {}
         for game in today_games:
