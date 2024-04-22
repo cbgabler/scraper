@@ -3,11 +3,9 @@ def sofa_url_creator(input_url, id_num):
     sofa_url = f"{input_url}/{first_name}-{last_name}/{id_num}"
     return sofa_url
 
-def url_creator(bookie_urls, sports):
-    final_urls = {}
-    for bookie, url in bookie_urls.items():
-        final_urls[bookie] = {}
-        for sport in sports:
-            final_urls[bookie][sport] = f"{url}{sport}"
-    print(final_urls)
-    return final_urls
+def dk_url_creator(dk_url, sports):
+    dk_urls = {}
+    for sport in sports:
+        dk_urls[sport] = f"{dk_url}{sport}"
+    print(dk_urls)
+    return dk_urls

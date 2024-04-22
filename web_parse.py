@@ -19,57 +19,55 @@ def init_driver():
     driver = uc.Chrome(options=options)
     return driver
 
-def extract_data(bookie_urls, driver):
+def dk_extract_data(dk_urls, driver):
     # Create the folder if it doesn't exist
     if not os.path.exists("sport_csvs"):
         os.makedirs("sport_csvs")
 
-    for bookie, sports_urls in bookie_urls.items():
-        for sport, url in sports_urls.items():
-            print(f"Now extracting {bookie} {sport}")
-            driver.get(url)
-            html = driver.page_source
-            time.sleep(2)
-            soup = BeautifulSoup(html, "lxml")
-            divs = soup.find_all("div", class_=cts.MAIN_DIV[bookie])
+    for sport, url in dk_urls.items():
+        print(f"Now extracting DraftKings {sport}")
+        driver.get(url)
+        html = driver.page_source
+        time.sleep(2)
+        soup = BeautifulSoup(html, "lxml")
+        divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
 
-            today_games = []
-            tomorrow_games = []
-            for div in divs:
-                date_div = div.find("div", class_="sportsbook-table-header__title")
-                if date_div:
-                    date_text = date_div.text.strip().lower()
-                    if "today" in date_text:
-                        today_games.append(div)
-                    elif "tomorrow" in date_text:
-                        tomorrow_games.append(div)
+        today_games = []
+        tomorrow_games = []
+        for div in divs:
+            date_div = div.find("div", class_="sportsbook-table-header__title")
+            if date_div:
+                date_text = date_div.text.strip().lower()
+                if "today" in date_text:
+                    today_games.append(div)
+                elif "tomorrow" in date_text:
+                    tomorrow_games.append(div)
 
-            today_data = {}
-            for game in today_games:
-                mlb_team = game.findAll(cts.TEAM_TYPE[bookie], class_=cts.TEAM_HTML[bookie])
-                mlb_ml = game.findAll(cts.ML_TYPE[bookie], class_=cts.ML_HTML[bookie])
+        today_data = {}
+        for game in today_games:
+            mlb_team = game.findAll(cts.DraftKingsConstants.TEAM_TYPE, class_=cts.DraftKingsConstants.TEAM_HTML)
+            mlb_ml = game.findAll(cts.DraftKingsConstants.ML_TYPE, class_=cts.DraftKingsConstants.ML_HTML)
 
-                for team, ml in zip(mlb_team, mlb_ml):
-                    today_data[team.text.strip()] = ml.text.strip()
+            for team, ml in zip(mlb_team, mlb_ml):
+                today_data[team.text.strip()] = ml.text.strip()
 
-            tomorrow_data = {}
-            for game in tomorrow_games:
-                mlb_team = game.findAll(cts.TEAM_TYPE[bookie], class_=cts.TEAM_HTML[bookie])
-                mlb_ml = game.findAll(cts.ML_TYPE[bookie], class_=cts.ML_HTML[bookie])
+        tomorrow_data = {}
+        for game in tomorrow_games:
+            mlb_team = game.findAll(cts.DraftKingsConstants.TEAM_TYPE, class_=cts.DraftKingsConstants.TEAM_HTML)
+            mlb_ml = game.findAll(cts.DraftKingsConstants.ML_TYPE, class_=cts.DraftKingsConstants.ML_HTML)
+            for team, ml in zip(mlb_team, mlb_ml):
+                tomorrow_data[team.text.strip()] = ml.text.strip()
 
-                for team, ml in zip(mlb_team, mlb_ml):
-                    tomorrow_data[team.text.strip()] = ml.text.strip()
+        with open(os.path.join("sport_csvs", f"DraftKings_{sport}_today_games.csv"), mode='w', newline='') as today_file:
+            fieldnames = ["Team", "Moneyline"]
+            writer = csv.DictWriter(today_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for team, moneyline in today_data.items():
+                writer.writerow({"Team": team, "Moneyline": moneyline})
 
-            with open(os.path.join("sport_csvs", f"{bookie}_{sport}_today_games.csv"), mode='w', newline='') as today_file:
-                fieldnames = ["Team", "Moneyline"]
-                writer = csv.DictWriter(today_file, fieldnames=fieldnames)
-                writer.writeheader()
-                for team, moneyline in today_data.items():
-                    writer.writerow({"Team": team, "Moneyline": moneyline})
-
-            with open(os.path.join("sport_csvs", f"{bookie}_{sport}_tomorrow_games.csv"), mode='w', newline='') as tomorrow_file:
-                fieldnames = ["Team", "Moneyline"]
-                writer = csv.DictWriter(tomorrow_file, fieldnames=fieldnames)
-                writer.writeheader()
-                for team, moneyline in tomorrow_data.items():
-                    writer.writerow({"Team": team, "Moneyline": moneyline})
+        with open(os.path.join("sport_csvs", f"DraftKings_{sport}_tomorrow_games.csv"), mode='w', newline='') as tomorrow_file:
+            fieldnames = ["Team", "Moneyline"]
+            writer = csv.DictWriter(tomorrow_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for team, moneyline in tomorrow_data.items():
+                writer.writerow({"Team": team, "Moneyline": moneyline})
