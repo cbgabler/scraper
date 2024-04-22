@@ -12,6 +12,6 @@ class DraftKingsConstants:
 
 SPORTS = {"baseball",
           "basketball",
-          "mma",
-          "hockey"
+          "hockey",
+          "football"
           }
