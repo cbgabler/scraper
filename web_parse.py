@@ -34,44 +34,30 @@ def dk_extract_data(dk_urls, driver):
         soup = BeautifulSoup(html, "lxml")
         divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
 
-        today_games = []
-        tomorrow_games = []
+        game_day_data = {}
         for div in divs:
             date_div = div.find("div", class_="sportsbook-table-header__title")
             if date_div:
                 date_text = date_div.text.strip().lower()
-                if "today" in date_text:
-                    today_games.append(div)
-                elif "tomorrow" in date_text:
-                    tomorrow_games.append(div)
-        print(today_games)
-        print(tomorrow_games)         
+                print(f"{sport} {date_text}")
+                game_day_data[date_text] = div
 
-        today_data = {}
-        for game in today_games:
-            mlb_team = game.findAll(cts.DraftKingsConstants.TEAM_TYPE, class_=cts.DraftKingsConstants.TEAM_HTML)
-            mlb_ml = game.findAll(cts.DraftKingsConstants.ML_TYPE, class_=cts.DraftKingsConstants.ML_HTML)
-
+        parsed_data = {}
+        for date, html in game_day_data.items():
+            mlb_team = html.findAll(cts.DraftKingsConstants.TEAM_TYPE, class_=cts.DraftKingsConstants.TEAM_HTML)
+            mlb_ml = html.findAll(cts.DraftKingsConstants.ML_TYPE, class_=cts.DraftKingsConstants.ML_HTML)
+            parsed_data[date] = []  # Initialize an empty list for each date
+            print(mlb_team, mlb_ml)
             for team, ml in zip(mlb_team, mlb_ml):
-                today_data[team.text.strip()] = ml.text.strip()
+                parsed_data[date].append([team.text.strip(), ml.text.strip()])
+        
+        print(parsed_data)
 
-        tomorrow_data = {}
-        for game in tomorrow_games:
-            mlb_team = game.findAll(cts.DraftKingsConstants.TEAM_TYPE, class_=cts.DraftKingsConstants.TEAM_HTML)
-            mlb_ml = game.findAll(cts.DraftKingsConstants.ML_TYPE, class_=cts.DraftKingsConstants.ML_HTML)
-            for team, ml in zip(mlb_team, mlb_ml):
-                tomorrow_data[team.text.strip()] = ml.text.strip()
+        for date, arr_info in parsed_data.items():
+            with open(os.path.join("sport_csvs", f"DraftKings_{sport}_{date}.csv"), mode='w', newline='') as today_file:
+                fieldnames = ["Team", "Moneyline"]
+                writer = csv.DictWriter(today_file, fieldnames=fieldnames)
+                writer.writeheader()
+                for team_info in arr_info:
+                    writer.writerow({"Team": team_info[0], "Moneyline": team_info[1]})
 
-        with open(os.path.join("sport_csvs", f"DraftKings_{sport}_today_games.csv"), mode='w', newline='') as today_file:
-            fieldnames = ["Team", "Moneyline"]
-            writer = csv.DictWriter(today_file, fieldnames=fieldnames)
-            writer.writeheader()
-            for team, moneyline in today_data.items():
-                writer.writerow({"Team": team, "Moneyline": moneyline})
-
-        with open(os.path.join("sport_csvs", f"DraftKings_{sport}_tomorrow_games.csv"), mode='w', newline='') as tomorrow_file:
-            fieldnames = ["Team", "Moneyline"]
-            writer = csv.DictWriter(tomorrow_file, fieldnames=fieldnames)
-            writer.writeheader()
-            for team, moneyline in tomorrow_data.items():
-                writer.writerow({"Team": team, "Moneyline": moneyline})
