@@ -8,6 +8,9 @@ import random
 import csv
 import constants as cts
 import os
+import webbrowser
+import time
+import requests
 
 def init_driver():
     ## collect random user agent to mask browser
@@ -15,47 +18,72 @@ def init_driver():
     ## initiate options through uc chrome
     options = uc.ChromeOptions()
     options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
+    ## options.add_argument("--disable-gpu")
     options.add_argument(f"user-agent={random_user_agent}")
     driver = uc.Chrome(options=options, driverless_options=True)
     return driver
 
-def dk_extract_data(dk_urls, driver):
+def dk_extract_data(dk_urls):
     # Create the folder if it doesn't exist
     if not os.path.exists("sport_csvs"):
         os.makedirs("sport_csvs")
 
     for sport, url in dk_urls.items():
         print(f"Now extracting DraftKings {sport}")
+        response = requests.get(url)
+        if response.status_code == 200:
+            html = response.text
+            print(html)
+            soup = BeautifulSoup(html, "lxml")
+            divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
+
+            game_day_data = {}
+            for div in divs:
+                date_div = div.find("div", class_="sportsbook-table-header__title")
+                if date_div:
+                    date_text = date_div.text.strip().lower()
+                    game_day_data[date_text] = div
+
+            parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
+                                    cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
+            write_data(parsed_data, sport, "dk")
+        else:
+            print(f"Failed to fetch {url}. Status code: {response.status_code}")
+
+def betus_extract_data(betus_urls, driver):
+    for sport, url in betus_urls.items():
+        driver.set_window_size(1080, 800)
+        print(f"Now extracting BetUS {sport}")
         driver.get(url)
-        wait = WebDriverWait(driver, 5)  # Adjust the timeout as needed
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
+        webbrowser.open(url)
+        time.sleep(5)
         html = driver.page_source
+
+        with open(f"betus_{sport}_data.html", "w", encoding="utf-8") as file:
+            file.write(html)
+        
         soup = BeautifulSoup(html, "lxml")
-        divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
+        divs = soup.find_all("div", class_=cts.BetUSConstants.MAIN_DIV)
 
         game_day_data = {}
         for div in divs:
-            date_div = div.find("div", class_="sportsbook-table-header__title")
+            date_div = "today"
             if date_div:
-                date_text = date_div.text.strip().lower()
-                game_day_data[date_text] = div
+                game_day_data[date_div] = div
 
-        parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
-                                cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
-        write_data(parsed_data, sport, "dk")
+        parsed_data = parse_data(game_day_data, cts.BetUSConstants.TEAM_TYPE, cts.BetUSConstants.TEAM_HTML,
+                                    cts.BetUSConstants.ML_TYPE, cts.BetUSConstants.ML_HTML)
+        write_data(parsed_data, sport, "betus")
 
 def b365_extract_data(b365_urls, driver):
     for sport, url in b365_urls.items():
         print(f"Now extracting B365 {sport}")
         driver.get(url)
         wait = WebDriverWait(driver, 100)  # Adjust the timeout as needed
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.B365Constants.MAIN_DIV)))
+        wait.until(EC.visibility_of_element_located((By.CLASS_NAME, cts.B365Constants.MAIN_DIV)))
         html = driver.page_source
         soup = BeautifulSoup(html, "lxml")
         divs = soup.find_all("div", class_=cts.B365Constants.MAIN_DIV)
-
-        print(divs)
 
         game_day_data = {}
         for div in divs:
@@ -80,7 +108,7 @@ def b365_extract_data(b365_urls, driver):
 
 def write_data(parsed_data, sport, book):
     for date, arr_info in parsed_data.items():
-            with open(os.path.join(f"sport_csvs", f"{sport}_{date}.csv"), mode='w', newline='') as main_file:
+            with open(os.path.join(f"sport_csvs", f"{book}_{sport}_{date}.csv"), mode='w', newline='') as main_file:
                 fieldnames = ["Team", f"Moneyline_{book}"]
                 writer = csv.DictWriter(main_file, fieldnames=fieldnames)
                 writer.writeheader()
@@ -118,7 +146,6 @@ def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
         mlb_team = html.findAll(team_type, team_html)
         mlb_ml = html.findAll(ml_type, ml_html)
         parsed_data[date] = []  # Initialize an empty list for each date
-        print(mlb_team, mlb_ml)
         for team, ml in zip(mlb_team, mlb_ml):
             parsed_data[date].append([team.text.strip(), ml.text.strip()])
 

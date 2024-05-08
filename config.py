@@ -15,3 +15,10 @@ def b365_url_creator(fd_url, ends):
         print(sport, end)
         b365_urls[sport] = f"{fd_url}{end}"
     return b365_urls
+
+def betus_url_creator(betus_url, leagues):
+    betus_urls ={}
+    for sport, league in leagues.items():
+        print(sport, league)
+        betus_urls[sport] = f"{betus_url}{league}"
+    return betus_urls

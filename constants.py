@@ -30,10 +30,18 @@ class B365Constants:
     ML_HTML = {"baseball" : "sac-ParticipantCenteredStacked60OTB_Odds",
                "basketball" : "sac-ParticipantOddsOnly50OTB_Odds",
                "hockey" : "sac-ParticipantOddsOnly50OTB_Odds"}
+    
+class BetUSConstants:
+    DEFAULT_URL = "https://www.betus.com.pa/sportsbook/"
+    MAIN_DIV = "game-block "
+    TEAM_TYPE = "span"
+    TEAM_HTML = "awayName"
+    ML_TYPE = "a"
+    ML_HTML = "ctl00_ctl00_M_middle_MarketConstructor1_ConstructorLines1_GameLines1_repHeaders_ctl00_repLines_ctl00_lblBetVisitorMoneyLine"
 
 LEAGUES = {"baseball" :"mlb",
            "basketball" :"nba",
-           "hockey" : "nhl",
+           "hockey" : "nhl"
            }
 
 B365 = {"baseball" : "B16/C20525425/D48/E1096/F10/",
