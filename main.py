@@ -2,6 +2,7 @@ import web_parse as wp
 import config
 import constants as cts
 import timeit
+from compare_lines import read_csv
 
 def main():
     # Measure time taken to execute extract_data
@@ -13,6 +14,7 @@ def main():
     wp.dk_extract_data(dk_urls, driver)
     wp.ggbet_extract_data(driver)
     ## wp.betus_extract_data(betus_urls, driver)
+    read_csv()
     end_time = timeit.default_timer()
     
     print(f"Time taken: {end_time - start_time} seconds")
