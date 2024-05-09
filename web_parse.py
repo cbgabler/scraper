@@ -18,37 +18,35 @@ def init_driver():
     ## initiate options through uc chrome
     options = uc.ChromeOptions()
     options.add_argument("--headless")
-    ## options.add_argument("--disable-gpu")
+    options.add_argument("--disable-gpu")
     options.add_argument(f"user-agent={random_user_agent}")
     driver = uc.Chrome(options=options, driverless_options=True)
     return driver
 
-def dk_extract_data(dk_urls):
+def dk_extract_data(dk_urls, driver):
     # Create the folder if it doesn't exist
     if not os.path.exists("sport_csvs"):
         os.makedirs("sport_csvs")
 
     for sport, url in dk_urls.items():
         print(f"Now extracting DraftKings {sport}")
-        response = requests.get(url)
-        if response.status_code == 200:
-            html = response.text
-            print(html)
-            soup = BeautifulSoup(html, "lxml")
-            divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
+        driver.get(url)
+        wait = WebDriverWait(driver, 5)  # Adjust the timeout as needed
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
+        html = driver.page_source
+        soup = BeautifulSoup(html, "lxml")
+        divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
 
-            game_day_data = {}
-            for div in divs:
-                date_div = div.find("div", class_="sportsbook-table-header__title")
-                if date_div:
-                    date_text = date_div.text.strip().lower()
-                    game_day_data[date_text] = div
+        game_day_data = {}
+        for div in divs:
+            date_div = div.find("div", class_="sportsbook-table-header__title")
+            if date_div:
+                date_text = date_div.text.strip().lower()
+                game_day_data[date_text] = div
 
-            parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
-                                    cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
-            write_data(parsed_data, sport, "dk")
-        else:
-            print(f"Failed to fetch {url}. Status code: {response.status_code}")
+        parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
+                                cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
+        write_data(parsed_data, sport, "dk")
 
 def betus_extract_data(betus_urls, driver):
     for sport, url in betus_urls.items():
@@ -104,6 +102,29 @@ def b365_extract_data(b365_urls, driver):
         parsed_data = parse_data(game_day_data, cts.B365Constants.TEAM_TYPE, team_html_class,
                                   cts.B365Constants.ML_TYPE, ml_html_class)
         append_data(parsed_data, sport, "b365")
+
+
+def ggbet_extract_data(driver):
+    print(f"Now extracting GGBET basketball")
+    driver.get("https://ggbet.com/en/sports/tournament/nba-24-10")
+    time.sleep(5)
+    html = driver.page_source
+    soup = BeautifulSoup(html, "lxml")
+    divs = soup.find_all("a", class_="__app-SmartLink-link overviewRow__container___2uPYc")
+
+    game_day_data = {}
+    for div in divs:
+        date_div = div.find("div", class_="fixtureData__text___1JMWR")
+        print(date_div)
+        if date_div:
+            date_text = date_div.text.strip().lower()
+            print(date_text)
+            game_day_data[date_text] = div
+
+    parsed_data = parse_data(game_day_data, "div", "__app-LogoTitle-name logoTitle__name___3_ywM",
+                                    "div", "oddButton__coef___2tokv")
+    write_data(parsed_data, "basketball", "GGBET")
+
 
 
 def write_data(parsed_data, sport, book):
