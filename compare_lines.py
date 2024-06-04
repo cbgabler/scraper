@@ -14,7 +14,6 @@ def read_csv():
         data = [row for row in csv_reader]
     return data
 
-# Endpoint to display the CSV data in your HTML
 @app.route('/')
 def index():
     data = read_csv()
