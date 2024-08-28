@@ -134,6 +134,8 @@ def write_data(parsed_data, sport, book):
                 writer = csv.DictWriter(main_file, fieldnames=fieldnames)
                 writer.writeheader()
                 for team_info in arr_info:
+                    if book == "GGBET":
+                        team_info[1]
                     writer.writerow({"Team": team_info[0], f"Moneyline_{book}": team_info[1]})
 
 def append_data(parsed_data, sport, book):
@@ -171,3 +173,11 @@ def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
             parsed_data[date].append([team.text.strip(), ml.text.strip()])
 
     return parsed_data
+
+def normalize_data(val):
+    normalized_line = val
+    if normalized_line <= 0:
+        normalized_line = -100/(normalized_line - 1)
+    else:
+        normalized_line = (normalized_line - 1) * 100
+    return normalized_line
