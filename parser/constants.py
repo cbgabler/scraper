@@ -11,7 +11,7 @@ class DraftKingsConstants:
     ML_HTML = "sportsbook-odds american no-margin default-color"
 
 class FanDuelConstants:
-    ## TODO doesnt work lol, need to figure out rotating class types
+    ## TODO doesnt work, need to figure out rotating class types
     DEFAULT_URL = "https://sportsbook.fanduel.com/navigation/"
     MAIN_DIV = "t h"
     TEAM_TYPE = "span"
