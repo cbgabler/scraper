@@ -3,10 +3,10 @@ def sofa_url_creator(input_url, id_num):
     sofa_url = f"{input_url}/{first_name}-{last_name}/{id_num}"
     return sofa_url
 
-def dk_url_creator(dk_url, sports):
+def dk_url_creator(dk_url, leagues):
     dk_urls = {}
-    for sport in sports:
-        dk_urls[sport] = f"{dk_url}{sport}"
+    for sport, league in leagues.items():
+        dk_urls[sport] = f"{dk_url}{sport}/{league}"
     return dk_urls
 
 def b365_url_creator(fd_url, ends):

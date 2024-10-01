@@ -3,7 +3,7 @@ class SofaScoreConstants:
     PLAYER_NUM = 885203
 
 class DraftKingsConstants:
-    DEFAULT_URL = "https://sportsbook.draftkings.com/?category=game-lines&subcategory="
+    DEFAULT_URL = "https://sportsbook.draftkings.com/leagues/"
     MAIN_DIV = "parlay-card-10-a"
     TEAM_TYPE = "div"
     TEAM_HTML = "event-cell__name-text"

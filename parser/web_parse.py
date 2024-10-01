@@ -30,6 +30,7 @@ def dk_extract_data(dk_urls, driver):
 
     for sport, url in dk_urls.items():
         print(f"Now extracting DraftKings {sport}")
+        print(url)
         driver.get(url)
         wait = WebDriverWait(driver, 5)  # Adjust the timeout as needed
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
