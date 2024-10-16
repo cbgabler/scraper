@@ -21,6 +21,9 @@ def index():
 
 import csv
 
+def find_highest_ev(file_paths)
+    for file in file_paths:
+
 def find_most_profitable_bet(file_path):
     most_profitable_bet = None
     max_profit = -float('inf')

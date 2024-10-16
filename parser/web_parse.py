@@ -2,6 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import undetected_chromedriver as uc
 from user_agents import user_agents
 import random
@@ -13,14 +15,16 @@ import time
 import requests
 
 def init_driver():
-    ## collect random user agent to mask browser
     random_user_agent = random.choice(user_agents)
-    ## initiate options through uc chrome
-    options = uc.ChromeOptions()
-    options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
-    options.add_argument(f"user-agent={random_user_agent}")
-    driver = uc.Chrome(options=options, driverless_options=True)
+    
+    # Set up Chrome options
+    options = Options()
+    options.add_argument("--headless")  # Run in headless mode
+    options.add_argument(f"user-agent={random_user_agent}")  # Set user agent
+    
+    # Initialize WebDriver with options
+    driver = webdriver.Chrome(options=options)
+    
     return driver
 
 def dk_extract_data(dk_urls, driver):
@@ -126,7 +130,33 @@ def ggbet_extract_data(driver):
                                     "div", "oddButton__coef___2tokv")
     write_data(parsed_data, "basketball", "GGBET")
 
+def extract_MGM(driver):
+    print("Now extracting MGMGrand Football")
+    driver.get("https://sports.az.betmgm.com/en/sports/football-11")
+    time.sleep(5)
+    html = driver.page_source
+    soup = BeautifulSoup(html, 'lxml')
+    divs = soup.find_all("ms-widget-layout", class_="row sport-lobby widget-layout")
 
+    headers = soup.find_all("div", class_="grid-group-header ng-star-inserted")
+
+    game_day_data = {}
+    for div in divs:
+        date_div = soup.find("div", class_="event-info-container ng-star-inserted")
+        print(date_div)
+        if date_div:
+            date_text = date_div.text.strip().lower()
+            game_day_data[date_text] = div
+
+    header_data = []
+    for header in headers:
+        header_data.append(header.text.strip().lower())
+
+    print(header_data)
+
+    parsed_data = parse_data(game_day_data, cts.MGMConstants.TEAM_TYPE, cts.MGMConstants.TEAM_HTML,
+                                    cts.MGMConstants.ML_TYPE, cts.MGMConstants.ML_HTML)
+    write_data(parsed_data, "football", "MGMGrand")
 
 def write_data(parsed_data, sport, book):
     for date, arr_info in parsed_data.items():
@@ -149,7 +179,6 @@ def append_data(parsed_data, sport, book):
                 reader = csv.DictReader(main_file)
                 fieldnames = reader.fieldnames
 
-                # Append new column name if not already present
                 if f"Moneyline_{book}" not in fieldnames:
                     fieldnames.append(f"Moneyline_{book}")
 
@@ -172,7 +201,7 @@ def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
         parsed_data[date] = []  # Initialize an empty list for each date
         for team, ml in zip(mlb_team, mlb_ml):
             parsed_data[date].append([team.text.strip(), ml.text.strip()])
-
+    print(parsed_data)
     return parsed_data
 
 def normalize_data(val):

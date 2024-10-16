@@ -9,9 +9,12 @@ def main():
     driver = wp.init_driver()
     dk_urls = config.dk_url_creator(cts.DraftKingsConstants.DEFAULT_URL, cts.LEAGUES)
     betus_urls = config.betus_url_creator(cts.BetUSConstants.DEFAULT_URL, cts.LEAGUES)
-    print(betus_urls)
+    b365_urls = config.b365_url_creator(cts.B365Constants.DEFAULT_URL,  cts.B365)
+    
     wp.dk_extract_data(dk_urls, driver)
-    wp.ggbet_extract_data(driver)
+    ## wp.ggbet_extract_data(driver)
+    wp.extract_MGM(driver)
+    wp.b365_extract_data(b365_urls, driver)
     ## wp.betus_extract_data(betus_urls, driver)
     end_time = timeit.default_timer()
     

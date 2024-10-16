@@ -20,3 +20,9 @@ def betus_url_creator(betus_url, leagues):
     for sport, league in leagues.items():
         betus_urls[sport] = f"{betus_url}{league}"
     return betus_urls
+
+def mgm_url_creator(mgm_url, sports):
+    mgm_urls = {}
+    for sport in sports:
+        mgm_urls[sport] = f"{mgm_url}{sport}"
+    return mgm_urls
