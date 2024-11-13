@@ -1,6 +1,11 @@
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 
-uri = ""
+load_dotenv()
+
+uri = os.getenv("CONNECTION_STR")
+
 client = MongoClient(uri)
 
 try:
