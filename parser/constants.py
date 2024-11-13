@@ -49,8 +49,7 @@ class MGMConstants:
     ML_TYPE = "span"
     ML_HTML = "custom-odds-value-style ng-star-inserted"
 
-LEAGUES = {"baseball" :"mlb",
-           "basketball" :"nba",
+LEAGUES = {"basketball" :"nba",
            "hockey" : "nhl"
            }
 
@@ -59,8 +58,7 @@ B365 = {"baseball" : "B16/C20525425/D48/E1096/F10/",
         "hockey" : "B17/C20836572/D48/E972/F10/",
         "football" : "AC/B12/C20426855/D48/E1441/F36/"}
 
-SPORTS = {"baseball",
-          "basketball",
+SPORTS = {"basketball",
           "hockey",
           "football"
           }

@@ -12,7 +12,13 @@ import constants as cts
 import os
 import webbrowser
 import time
-import requests
+import pymongo
+import datetime
+
+def init_mongo():
+    client = pymongo.MongoClient("mongodb+srv://gablerc:C%40rs0ns0ns0nP4010868582490@scraper.rjit8.mongodb.net/?retryWrites=true&w=majority&appName=scraper")
+    db = client["scrapedLines"]
+    return db
 
 def init_driver():
     random_user_agent = random.choice(user_agents)
@@ -27,16 +33,14 @@ def init_driver():
     
     return driver
 
-def dk_extract_data(dk_urls, driver):
-    # Create the folder if it doesn't exist
+def dk_extract_data(dk_urls, driver, db):
     if not os.path.exists("sport_csvs"):
         os.makedirs("sport_csvs")
-
+    
     for sport, url in dk_urls.items():
         print(f"Now extracting DraftKings {sport}")
-        print(url)
         driver.get(url)
-        wait = WebDriverWait(driver, 5)  # Adjust the timeout as needed
+        wait = WebDriverWait(driver, 5)
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
         html = driver.page_source
         soup = BeautifulSoup(html, "lxml")
@@ -51,7 +55,7 @@ def dk_extract_data(dk_urls, driver):
 
         parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
                                 cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
-        write_data(parsed_data, sport, "dk")
+        write_data(parsed_data, sport, "dk", db)
 
 def betus_extract_data(betus_urls, driver):
     for sport, url in betus_urls.items():
@@ -158,40 +162,41 @@ def extract_MGM(driver):
                                     cts.MGMConstants.ML_TYPE, cts.MGMConstants.ML_HTML)
     write_data(parsed_data, "football", "MGMGrand")
 
-def write_data(parsed_data, sport, book):
+def write_data(parsed_data, sport, book, db):
+    collection = db["draftkings"]  # Use book name as collection name
     for date, arr_info in parsed_data.items():
-            with open(os.path.join(f"sport_csvs", f"{book}_{sport}_{date}.csv"), mode='w', newline='') as main_file:
-                fieldnames = ["Team", f"Moneyline_{book}"]
-                writer = csv.DictWriter(main_file, fieldnames=fieldnames)
-                writer.writeheader()
-                for team_info in arr_info:
-                    if book == "GGBET":
-                        team_info[1]
-                    writer.writerow({"Team": team_info[0], f"Moneyline_{book}": team_info[1]})
+        for team_info in arr_info:
+            document = {
+                "date": date,
+                "team": team_info[0],
+                "moneyline": team_info[1],
+                "sport": sport,
+                "book": book
+            }
+            collection.insert_one(document)  # Insert the document into MongoDB
 
-def append_data(parsed_data, sport, book):
+def append_data(parsed_data, sport, book, db):
+    collection = db[book]
     for date, arr_info in parsed_data.items():
-        file_path = os.path.join("sport_csvs", f"{sport}_{date}.csv")
-        updated_data = []
-
-        if os.path.exists(file_path):
-            with open(file_path, mode='r', newline='') as main_file:
-                reader = csv.DictReader(main_file)
-                fieldnames = reader.fieldnames
-
-                if f"Moneyline_{book}" not in fieldnames:
-                    fieldnames.append(f"Moneyline_{book}")
-
-                for row in reader:
-                    for team_info in arr_info:
-                        if row["Team"] == team_info[0]:
-                            row[f"Moneyline_{book}"] = team_info[1]
-                    updated_data.append(row)
-
-        with open(file_path, mode='w', newline='') as main_file:
-            writer = csv.DictWriter(main_file, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(updated_data)
+        for team_info in arr_info:
+            # Check if the document already exists for this team and date
+            existing_document = collection.find_one({"team": team_info[0], "date": date, "sport": sport, "book": book})
+            if existing_document:
+                # Update existing document with the new moneyline
+                collection.update_one(
+                    {"_id": existing_document["_id"]},
+                    {"$set": {"moneyline": team_info[1]}}
+                )
+            else:
+                # If no existing document, insert a new one
+                document = {
+                    "date": date,
+                    "team": team_info[0],
+                    "moneyline": team_info[1],
+                    "sport": sport,
+                    "book": book
+                }
+                collection.insert_one(document)
 
 def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
     parsed_data = {}

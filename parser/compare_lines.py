@@ -21,44 +21,19 @@ def index():
 
 import csv
 
-def find_highest_ev(file_paths)
-    for file in file_paths:
-
-def find_most_profitable_bet(file_path):
+def find_most_profitable_bet(file_paths):
     most_profitable_bet = None
-    max_profit = -float('inf')
 
-    with open(file_path, mode='r') as file:
-        csv_reader = csv.DictReader(file)
-        
-        for row in csv_reader:
-            bet = row['Bet']
-            odds = float(row['Odds'])
-            stake = float(row['Stake'])
-            profit = (odds * stake) - stake
-            if profit > max_profit:
-                max_profit = profit
-                most_profitable_bet = {
-                    'Bet': bet,
-                    'Odds': odds,
-                    'Stake': stake,
-                    'Profit': profit
-                }
+    for file_path in file_paths:
+        with open(file_path, mode='r') as file:
+            csv_reader = csv.DictReader(file)
+            
+            for row in csv_reader:
+                team = row['Team']
+                odds = row['Moneyline']
+                print(team, odds)
     
     return most_profitable_bet
 
+find_most_profitable_bet('parser/tests/test_csvs/random_teams_1.csv')
 
-file_path = 'betting_data.csv'
-most_profitable_bet = find_most_profitable_bet(file_path)
-
-if most_profitable_bet:
-    print(f"The most profitable bet is: {most_profitable_bet['Bet']}")
-    print(f"Odds: {most_profitable_bet['Odds']}")
-    print(f"Stake: {most_profitable_bet['Stake']}")
-    print(f"Profit: {most_profitable_bet['Profit']:.2f}")
-else:
-    print("No bets found.")
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
