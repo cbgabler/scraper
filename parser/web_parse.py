@@ -14,6 +14,7 @@ import webbrowser
 import time
 import pymongo
 import datetime
+import backend
 
 def init_mongo():
     client = pymongo.MongoClient("mongodb+srv://gablerc:C%40rs0ns0ns0nP4010868582490@scraper.rjit8.mongodb.net/?retryWrites=true&w=majority&appName=scraper")
@@ -22,13 +23,10 @@ def init_mongo():
 
 def init_driver():
     random_user_agent = random.choice(user_agents)
-    
-    # Set up Chrome options
+
     options = Options()
-    options.add_argument("--headless")  # Run in headless mode
-    options.add_argument(f"user-agent={random_user_agent}")  # Set user agent
-    
-    # Initialize WebDriver with options
+    options.add_argument("--headless")
+    options.add_argument(f"user-agent={random_user_agent}")
     driver = webdriver.Chrome(options=options)
     
     return driver
@@ -179,16 +177,13 @@ def append_data(parsed_data, sport, book, db):
     collection = db[book]
     for date, arr_info in parsed_data.items():
         for team_info in arr_info:
-            # Check if the document already exists for this team and date
             existing_document = collection.find_one({"team": team_info[0], "date": date, "sport": sport, "book": book})
             if existing_document:
-                # Update existing document with the new moneyline
                 collection.update_one(
                     {"_id": existing_document["_id"]},
                     {"$set": {"moneyline": team_info[1]}}
                 )
             else:
-                # If no existing document, insert a new one
                 document = {
                     "date": date,
                     "team": team_info[0],
