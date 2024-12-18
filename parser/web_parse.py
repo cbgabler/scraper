@@ -14,10 +14,15 @@ import webbrowser
 import time
 import pymongo
 import datetime
-import backend
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def init_mongo():
-    client = pymongo.MongoClient("mongodb+srv://gablerc:C%40rs0ns0ns0nP4010868582490@scraper.rjit8.mongodb.net/?retryWrites=true&w=majority&appName=scraper")
+    mongo_uri = os.getenv("CONNECTION_STR")
+    if not mongo_uri:
+        raise ValueError("MONGO_URI is not set in the .env file")
+    client = pymongo.MongoClient(mongo_uri)
     db = client["scrapedLines"]
     return db
 

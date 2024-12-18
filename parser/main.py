@@ -9,7 +9,7 @@ def main():
     start_time = timeit.default_timer()
     driver = wp.init_driver()
     db = wp.init_mongo()
-    test.test_clicking(driver)
+    test.test_clicking(driver, db)
     dk_urls = config.dk_url_creator(cts.DraftKingsConstants.DEFAULT_URL, cts.LEAGUES)
     betus_urls = config.betus_url_creator(cts.BetUSConstants.DEFAULT_URL, cts.LEAGUES)
     b365_urls = config.b365_url_creator(cts.B365Constants.DEFAULT_URL,  cts.B365)
