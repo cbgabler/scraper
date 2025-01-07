@@ -1,7 +1,10 @@
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 
-uri = ""
-client = MongoClient(uri)
+load_dotenv()
+
+client = MongoClient(os.getenv("CONNECTION_STR"))
 
 try:
     database = client.get_database("sample_mflix")

@@ -37,9 +37,6 @@ def init_driver():
     return driver
 
 def dk_extract_data(dk_urls, driver, db):
-    if not os.path.exists("sport_csvs"):
-        os.makedirs("sport_csvs")
-    
     for sport, url in dk_urls.items():
         print(f"Now extracting DraftKings {sport}")
         driver.get(url)
