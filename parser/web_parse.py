@@ -37,25 +37,24 @@ def init_driver():
     return driver
 
 def dk_extract_data(dk_urls, driver, db):
-    for sport, url in dk_urls.items():
-        print(f"Now extracting DraftKings {sport}")
-        driver.get(url)
-        wait = WebDriverWait(driver, 5)
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
-        html = driver.page_source
-        soup = BeautifulSoup(html, "lxml")
-        divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
+    print(f"Now extracting DraftKings Basketball")
+    driver.get(dk_urls)
+    wait = WebDriverWait(driver, 5)
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
+    html = driver.page_source
+    soup = BeautifulSoup(html, "lxml")
+    divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
 
-        game_day_data = {}
-        for div in divs:
-            date_div = div.find("div", class_="sportsbook-table-header__title")
-            if date_div:
-                date_text = date_div.text.strip().lower()
-                game_day_data[date_text] = div
+    game_day_data = {}
+    for div in divs:
+        date_div = div.find("div", class_="sportsbook-table-header__title")
+        if date_div:
+            date_text = date_div.text.strip().lower()
+            game_day_data[date_text] = div
 
-        parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
-                                cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
-        write_data(parsed_data, sport, "dk", db)
+    parsed_data = parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
+                            cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
+    write_data(parsed_data, "basketball", "dk", db)
 
 def betus_extract_data(betus_urls, driver):
     for sport, url in betus_urls.items():
@@ -163,7 +162,7 @@ def extract_MGM(driver):
     write_data(parsed_data, "football", "MGMGrand")
 
 def write_data(parsed_data, sport, book, db):
-    collection = db["draftkings"]  # Use book name as collection name
+    collection = db["draftkings"]
     for date, arr_info in parsed_data.items():
         for team_info in arr_info:
             document = {
@@ -173,6 +172,7 @@ def write_data(parsed_data, sport, book, db):
                 "sport": sport,
                 "book": book
             }
+            print(document)
             collection.insert_one(document)  # Insert the document into MongoDB
 
 def append_data(parsed_data, sport, book, db):

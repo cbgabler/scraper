@@ -7,27 +7,29 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
+import time
 
 def test_clicking(driver, db):
     i = 1
-    while i <= 15:
+    while i <= 14:
         action = ActionChains(driver)
         driver.get("https://sportsbook.draftkings.com/")
         driver.find_element(By.XPATH, f"//*[@id='root']/section/section[2]/div[1]/div[1]/div[2]/ul/li[{i}]/a").click()
         print(driver.current_url)
+        driver.get(driver.current_url)
         ## popular_clickables = popular.find_elements(By.CLASS_NAME, "sportsbook-navitation-item-title-text")
         ## popular_clickables[i].click()
-        sub_clickables = driver.find_elements(By.CLASS_NAME, "sportsbook-category-tab-name")
-        for j, sub_clickable in enumerate(sub_clickables):
-            if j == 13:
-                break
-            if j == 1:
-                print(1)
-                continue
-            print(sub_clickable)
-            action.move_to_element(sub_clickable).click().perform()
+        f = 0
+        print(driver.find_elements(By.CLASS_NAME, "sportsbook-category-tab-name"))
+        while f < len(driver.find_elements(By.CLASS_NAME, "sportsbook-category-tab-name")):
+            driver.get(driver.current_url)
+            sub_clickable = driver.find_elements(By.XPATH, "//*[@id='root']/section/section[2]/section/div[4]/div/div[1]/div[1]/div")
+            action.move_to_element(sub_clickable[f]).click().perform()
             sub_url = driver.current_url
-            dk_extract_data(sub_url, driver, db)
+            print(sub_url)
+            print("starting")
+            extract_pass(sub_url, driver, db)
+            print("Done")
         url = driver.current_url
         print(url)
         i += 1
@@ -35,10 +37,10 @@ def test_clicking(driver, db):
 def dk_extract_data(url, driver, db):
     driver.get(url)
     wait = WebDriverWait(driver, 5)
-    wait.until(EC.presence_of_element_located((By.CLASS_NAME, cts.DraftKingsConstants.MAIN_DIV)))
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "side-rail-name")))
     html = driver.page_source
     soup = BeautifulSoup(html, "lxml")
-    divs = soup.find_all("div", class_=cts.DraftKingsConstants.MAIN_DIV)
+    divs = soup.find_all("a", class_="side-rail-name-link")
 
     game_day_data = {}
     for div in divs:
@@ -50,6 +52,45 @@ def dk_extract_data(url, driver, db):
     parsed_data = wp.parse_data(game_day_data, cts.DraftKingsConstants.TEAM_TYPE, cts.DraftKingsConstants.TEAM_HTML,
                                 cts.DraftKingsConstants.ML_TYPE, cts.DraftKingsConstants.ML_HTML)
     wp.write_data(parsed_data, "football", "dk", db)
+
+def extract_pass(url, driver, db):
+    driver.get(url)
+    wait = WebDriverWait(driver, 5)
+    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "side-rail-name")))
+    html = driver.page_source
+    soup = BeautifulSoup(html, "lxml")
+    divs = soup.find_all("a", class_="side-rail-name-link")
+    odds = soup.find_all("span", class_="sb-selection-picker__selection-odds")
+    amounts = soup.find_all("span", class_="sb-selection-picker__selection-label")
+
+    for i, div in enumerate(divs):
+        name = div.text
+        odd = odds[i].text
+        amount = amounts[i].text
+        write_data(name, amount, odd, "football", "dk", db)
+
+def write_data(name, amount, odd, sport, book, db):
+    collection = db["passyards"]
+    document = {
+        "name": name,
+        "amount": amount,
+        "odd": odd,
+        "sport": sport,
+        "book": book
+    }
+    print(document)
+    collection.insert_one(document)  # Insert the document into MongoDB
+
+def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
+    parsed_data = {}
+    for date, html in game_day_data.items():
+        mlb_team = html.findAll(team_type, team_html)
+        mlb_ml = html.findAll(ml_type, ml_html)
+        parsed_data[date] = []  # Initialize an empty list for each date
+        for team, ml in zip(mlb_team, mlb_ml):
+            parsed_data[date].append([team.text.strip(), ml.text.strip()])
+    print(parsed_data)
+    return parsed_data
 
 def clicking_b365(driver):
     action = ActionChains(driver)
