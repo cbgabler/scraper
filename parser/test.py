@@ -21,15 +21,16 @@ def test_clicking(driver, db):
         ## popular_clickables[i].click()
         f = 0
         print(driver.find_elements(By.CLASS_NAME, "sportsbook-category-tab-name"))
+        print(len(driver.find_elements(By.CLASS_NAME, "sportsbook-category-tab-name")))
         while f < len(driver.find_elements(By.CLASS_NAME, "sportsbook-category-tab-name")):
             driver.get(driver.current_url)
             sub_clickable = driver.find_elements(By.XPATH, "//*[@id='root']/section/section[2]/section/div[4]/div/div[1]/div[1]/div")
+            print(sub_clickable)
             action.move_to_element(sub_clickable[f]).click().perform()
             sub_url = driver.current_url
             print(sub_url)
-            print("starting")
             extract_pass(sub_url, driver, db)
-            print("Done")
+            f += 1
         url = driver.current_url
         print(url)
         i += 1
@@ -67,10 +68,10 @@ def extract_pass(url, driver, db):
         name = div.text
         odd = odds[i].text
         amount = amounts[i].text
-        write_data(name, amount, odd, "football", "dk", db)
+        write_data(name, amount, odd, "football", "dk", "passyards", db)
 
-def write_data(name, amount, odd, sport, book, db):
-    collection = db["passyards"]
+def write_data(name, amount, odd, sport, book, db_name, db):
+    collection = db[f"{db_name}"]
     document = {
         "name": name,
         "amount": amount,
@@ -79,7 +80,7 @@ def write_data(name, amount, odd, sport, book, db):
         "book": book
     }
     print(document)
-    collection.insert_one(document)  # Insert the document into MongoDB
+    collection.insert_one(document)
 
 def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
     parsed_data = {}
@@ -95,6 +96,7 @@ def parse_data(game_day_data, team_type, team_html, ml_type, ml_html):
 def clicking_b365(driver):
     action = ActionChains(driver)
     driver.get("https://www.co.bet365.com/?_h=7zGwoPT5idsD__-vUHcGpw%3D%3D&btsffd=1#/HO/")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,6 +3,8 @@ class SofaScoreConstants:
     PLAYER_NUM = 885203
 
 class DraftKingsConstants:
+    class NFL:
+        NFL_MAIN_XPATH = []
     DEFAULT_URL = "https://sportsbook.draftkings.com/leagues/"
     MAIN_DIV = "parlay-card-10-a"
     TEAM_TYPE = "div"
